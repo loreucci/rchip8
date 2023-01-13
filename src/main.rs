@@ -20,7 +20,7 @@ fn main() {
 
     // create display and show it
     let mut display = Display::new(&sdl_context).unwrap_or_else(|err| print_error_and_quit(&err));
-    display.draw();
+    display.refresh();
 
     // create keyboard manager
     let mut keyboard = Keyboard::new(&sdl_context).unwrap_or_else(|err| print_error_and_quit(&err));
@@ -34,7 +34,7 @@ fn main() {
         }
 
         // update display
-        display.draw();
+        display.refresh();
 
         // sleep
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 30));
