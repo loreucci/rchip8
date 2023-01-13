@@ -3,11 +3,11 @@ use std::time::Duration;
 
 extern crate sdl2;
 
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
-
 mod display;
 use display::Display;
+
+mod keyboard;
+use keyboard::Keyboard;
 
 fn print_error_and_quit(s: &str) -> ! {
     eprintln!("{}", s);
@@ -22,23 +22,15 @@ fn main() {
     let mut display = Display::new(&sdl_context).unwrap_or_else(|err| print_error_and_quit(&err));
     display.draw();
 
-    // temporary input management (1)
-    let mut event_pump = sdl_context
-        .event_pump()
-        .unwrap_or_else(|err| print_error_and_quit(&err));
+    // create keyboard manager
+    let mut keyboard = Keyboard::new(&sdl_context).unwrap_or_else(|err| print_error_and_quit(&err));
 
     // main loop
     'running: loop {
-        // temporary input management (2)
-        for event in event_pump.poll_iter() {
-            match event {
-                Event::Quit { .. }
-                | Event::KeyDown {
-                    keycode: Some(Keycode::Escape),
-                    ..
-                } => break 'running,
-                _ => {}
-            }
+        // process input keys
+        keyboard.poll_events();
+        if keyboard.quit_requested {
+            break 'running;
         }
 
         // update display
