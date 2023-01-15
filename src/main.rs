@@ -1,5 +1,5 @@
 use std::process;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 extern crate sdl2;
 
@@ -34,6 +34,8 @@ fn main() {
 
     // main loop
     'running: loop {
+        let start_time = Instant::now();
+
         // process input keys
         keyboard.tick();
         if keyboard.quit_requested {
@@ -46,6 +48,7 @@ fn main() {
         display.tick();
 
         // sleep
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        let elapsed = start_time.elapsed();
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60) - elapsed);
     }
 }
