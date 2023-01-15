@@ -1,3 +1,5 @@
+use std::env;
+use std::fs;
 use std::process;
 use std::time::{Duration, Instant};
 
@@ -8,6 +10,7 @@ use rchip8::audio::Audio;
 use rchip8::commons::CanTick;
 use rchip8::display::Display;
 use rchip8::keyboard::Keyboard;
+use rchip8::memory;
 use rchip8::timer::Timer;
 
 fn print_error_and_quit(s: &str) -> ! {
@@ -16,6 +19,23 @@ fn print_error_and_quit(s: &str) -> ! {
 }
 
 fn main() {
+    // parse arguments
+    let mut args = env::args();
+    args.next();
+    let rom_path = match args.next() {
+        Some(name) => name,
+        None => print_error_and_quit("Not enough arguments, specify a path to a ROM."),
+    };
+
+    // memory, registers and stack
+    let mut memory = [0u8; 4096];
+    let mut v = [0u8; 16];
+    let mut i = 0u16;
+    let mut stack: Vec<u16> = Vec::new();
+    let mut pc = 512u16;
+    memory::load_rom(&mut memory, &rom_path).unwrap_or_else(|err| print_error_and_quit(&err));
+    memory::load_character_set(&mut memory);
+
     // initialize sdl
     let sdl_context = sdl2::init().unwrap_or_else(|err| print_error_and_quit(&err));
 
