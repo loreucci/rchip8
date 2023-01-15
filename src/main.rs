@@ -4,6 +4,7 @@ use std::time::Duration;
 extern crate sdl2;
 
 mod rchip8;
+use rchip8::audio::Audio;
 use rchip8::commons::CanTick;
 use rchip8::display::Display;
 use rchip8::keyboard::Keyboard;
@@ -24,6 +25,9 @@ fn main() {
     // create keyboard manager
     let mut keyboard = Keyboard::new(&sdl_context).unwrap_or_else(|err| print_error_and_quit(&err));
 
+    // create audio device
+    let mut audio = Audio::new(&sdl_context).unwrap_or_else(|err| print_error_and_quit(&err));
+
     // main loop
     'running: loop {
         // process input keys
@@ -32,10 +36,11 @@ fn main() {
             break 'running;
         }
 
-        // update display
+        // update components
+        audio.tick();
         display.tick();
 
         // sleep
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 30));
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }
