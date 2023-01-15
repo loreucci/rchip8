@@ -10,6 +10,7 @@ const PIXEL_SIZE: u32 = 10;
 pub struct Display {
     canvas: WindowCanvas,
     memory: [u8; 64 * 32],
+    refresh: bool,
 }
 
 impl Display {
@@ -27,6 +28,7 @@ impl Display {
         Ok(Display {
             canvas,
             memory: [0; 64 * 32],
+            refresh: true,
         })
     }
 
@@ -47,12 +49,17 @@ impl Display {
                 self.memory[idx] ^= p;
             }
         }
+        self.refresh = true;
         carry
     }
 }
 
 impl CanTick for Display {
     fn tick(&mut self) {
+        if !self.refresh {
+            return;
+        }
+
         // background
         self.canvas.set_draw_color(Color::RGB(0, 0, 0));
         self.canvas.clear();
@@ -78,5 +85,6 @@ impl CanTick for Display {
 
         // actual draw
         self.canvas.present();
+        self.refresh = false;
     }
 }
