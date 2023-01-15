@@ -8,6 +8,7 @@ use rchip8::audio::Audio;
 use rchip8::commons::CanTick;
 use rchip8::display::Display;
 use rchip8::keyboard::Keyboard;
+use rchip8::timer::Timer;
 
 fn print_error_and_quit(s: &str) -> ! {
     eprintln!("{}", s);
@@ -28,6 +29,9 @@ fn main() {
     // create audio device
     let mut audio = Audio::new(&sdl_context).unwrap_or_else(|err| print_error_and_quit(&err));
 
+    // timer
+    let mut timer = Timer { time: 0 };
+
     // main loop
     'running: loop {
         // process input keys
@@ -37,6 +41,7 @@ fn main() {
         }
 
         // update components
+        timer.tick();
         audio.tick();
         display.tick();
 
