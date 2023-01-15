@@ -3,6 +3,8 @@ use sdl2::keyboard::Keycode;
 use sdl2::EventPump;
 use sdl2::Sdl;
 
+use super::commons::CanTick;
+
 pub struct Keyboard {
     event_pump: EventPump,
     pub quit_requested: bool,
@@ -16,8 +18,10 @@ impl Keyboard {
             quit_requested: false,
         })
     }
+}
 
-    pub fn poll_events(&mut self) {
+impl CanTick for Keyboard {
+    fn tick(&mut self) {
         for event in self.event_pump.poll_iter() {
             match event {
                 Event::Quit { .. }

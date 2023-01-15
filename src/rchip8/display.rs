@@ -3,6 +3,8 @@ use sdl2::rect::Rect;
 use sdl2::render::WindowCanvas;
 use sdl2::Sdl;
 
+use super::commons::CanTick;
+
 const PIXEL_SIZE: u32 = 10;
 
 pub struct Display {
@@ -28,7 +30,29 @@ impl Display {
         })
     }
 
-    pub fn refresh(&mut self) {
+    #[must_use = "Value must be used to set VF"]
+    pub fn draw(&mut self, x: u8, y: u8, sprite: &[u8]) -> bool {
+        let x = x as usize;
+        let y = y as usize;
+        let mut carry = false;
+        for v in 0..sprite.len() {
+            for u in 0..8 {
+                let idx = (x + u) + (y + v) * 64;
+                let p = (sprite[v] >> (7 - u)) & 1;
+                // check carry
+                if self.memory[idx] == 1 && p ^ self.memory[idx] == 0 {
+                    carry = true;
+                }
+                // set pixel
+                self.memory[idx] ^= p;
+            }
+        }
+        carry
+    }
+}
+
+impl CanTick for Display {
+    fn tick(&mut self) {
         // background
         self.canvas.set_draw_color(Color::RGB(0, 0, 0));
         self.canvas.clear();
@@ -54,25 +78,5 @@ impl Display {
 
         // actual draw
         self.canvas.present();
-    }
-
-    #[must_use = "Value must be used to set VF"]
-    pub fn draw(&mut self, x: u8, y: u8, sprite: &[u8]) -> bool {
-        let x = x as usize;
-        let y = y as usize;
-        let mut carry = false;
-        for v in 0..sprite.len() {
-            for u in 0..8 {
-                let idx = (x + u) + (y + v) * 64;
-                let p = (sprite[v] >> (7 - u)) & 1;
-                // check carry
-                if self.memory[idx] == 1 && p ^ self.memory[idx] == 0 {
-                    carry = true;
-                }
-                // set pixel
-                self.memory[idx] ^= p;
-            }
-        }
-        carry
     }
 }
