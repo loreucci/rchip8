@@ -56,6 +56,16 @@ fn main() {
     'running: loop {
         let start_time = Instant::now();
 
+        // fetch
+        let opcode = ((memory[pc as usize] as u16) << 8) + memory[(pc + 1) as usize] as u16;
+        // decode and execute
+        match opcode & 0xF000 {
+            _ => print_error_and_quit(&format!(
+                "Error: instruction {:#X} not implemented!",
+                opcode
+            )),
+        }
+
         // process input keys
         keyboard.tick();
         if keyboard.quit_requested {
