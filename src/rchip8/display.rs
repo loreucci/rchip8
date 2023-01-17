@@ -40,6 +40,9 @@ impl Display {
         for v in 0..sprite.len() {
             for u in 0..8 {
                 let idx = (x + u) + (y + v) * 64;
+                if idx >= 64 * 32 {
+                    continue;
+                }
                 let p = (sprite[v] >> (7 - u)) & 1;
                 // check carry
                 if self.memory[idx] == 1 && p ^ self.memory[idx] == 0 {
