@@ -3,30 +3,40 @@ use sdl2::Sdl;
 
 use super::commons::CanTick;
 
-const AUDIO_FREQUENCY: i32 = 48_000;
-
 pub struct Audio {
-    timer: u8,
+    time: u8,
+    ticks: u32,
+    freq: u32,
     device: AudioQueue<i16>,
 }
 
 impl Audio {
-    pub fn new(sdl: &Sdl) -> Result<Audio, String> {
+    pub fn new(sdl: &Sdl, freq: u32) -> Result<Audio, String> {
         let subsystem = sdl.audio()?;
         let spec = AudioSpecDesired {
-            freq: Some(AUDIO_FREQUENCY),
+            freq: Some(48_000),
             channels: Some(2),
             samples: None, // default sample size
         };
         let device = subsystem.open_queue::<i16, _>(None, &spec)?;
-        Ok(Audio { timer: 0, device })
+        Ok(Audio {
+            time: 0,
+            ticks: 0,
+            freq,
+            device,
+        })
     }
 
     pub fn play_sound(&mut self, duration: u8) {
         // create square wave
         let tone_volume = 1_000i16;
-        let period: usize = (AUDIO_FREQUENCY / 256).try_into().unwrap();
-        let sample_count: usize = (AUDIO_FREQUENCY * duration as i32 / 60).try_into().unwrap();
+        let period: usize = (self.device.spec().freq / 256).try_into().unwrap();
+        // create double the amount of samples to account for delays
+        let sample_count: usize =
+            (2 * self.device.spec().freq * self.device.spec().channels as i32 * duration as i32
+                / 60)
+                .try_into()
+                .unwrap();
         let mut sound_to_play = vec![0; sample_count];
         for x in 0..sample_count {
             sound_to_play[x] = if (x / period) % 2 == 0 {
@@ -45,17 +55,19 @@ impl Audio {
                 eprintln!("Cannot play audio: {}", err);
             });
         self.device.resume();
-        self.timer = duration;
+        self.time = duration;
+        self.ticks = duration as u32 * self.freq / 60;
     }
 }
 
 impl CanTick for Audio {
     fn tick(&mut self) {
-        if self.timer > 0 {
-            self.timer -= 1;
-            if self.timer == 0 {
-                self.device.pause();
-            }
+        if self.time > 0 {
+            self.ticks -= 1;
+            self.time = (self.ticks * 60 / self.freq) as u8;
+        }
+        if self.time == 0 {
+            self.device.pause();
         }
     }
 }

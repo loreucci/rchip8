@@ -45,6 +45,10 @@ fn main() {
         None => print_error_and_quit("Not enough arguments, specify a path to a ROM."),
     };
 
+    // clock frequency
+    let freq = 500u32;
+    let cycle_duration = Duration::new(0, 1_000_000_000u32 / freq);
+
     // memory, registers and stack
     let mut memory = [0u8; 4096];
     let mut v = [0u8; 16];
@@ -65,10 +69,10 @@ fn main() {
     let mut keyboard = Keyboard::new(&sdl_context).unwrap_or_else(|err| print_error_and_quit(&err));
 
     // create audio device
-    let mut audio = Audio::new(&sdl_context).unwrap_or_else(|err| print_error_and_quit(&err));
+    let mut audio = Audio::new(&sdl_context, freq).unwrap_or_else(|err| print_error_and_quit(&err));
 
     // timer
-    let mut timer = Timer { time: 0 };
+    let mut timer = Timer::new(freq);
 
     // main loop
     'running: loop {
@@ -139,6 +143,8 @@ fn main() {
 
         // sleep
         let elapsed = start_time.elapsed();
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60) - elapsed);
+        if elapsed < cycle_duration {
+            ::std::thread::sleep(cycle_duration - elapsed);
+        }
     }
 }
