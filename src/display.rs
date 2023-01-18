@@ -55,6 +55,13 @@ impl Display {
         self.refresh = true;
         carry
     }
+
+    pub fn clear(&mut self) {
+        for i in 0..self.memory.len() {
+            self.memory[i] = 0;
+        }
+        self.refresh = true;
+    }
 }
 
 impl CanTick for Display {

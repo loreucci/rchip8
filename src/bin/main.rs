@@ -82,11 +82,40 @@ fn main() {
         let opcode = ((memory[pc as usize] as u16) << 8) + memory[(pc + 1) as usize] as u16;
         // decode and execute
         match opcode & 0xF000 {
+            0x0000 => {
+                if opcode == 0x00E0 {
+                    display.clear();
+                    pc += 2;
+                } else if opcode == 0x00EE {
+                    pc = stack.pop().unwrap();
+                } else {
+                    stack.push(pc + 2);
+                    pc = get_nnn(opcode);
+                }
+            }
             0x1000 => {
+                pc = get_nnn(opcode);
+            }
+            0x2000 => {
+                stack.push(pc + 2);
                 pc = get_nnn(opcode);
             }
             0x3000 => {
                 if v[get_reg(opcode, 1)] == get_nn(opcode) {
+                    pc += 4;
+                } else {
+                    pc += 2;
+                }
+            }
+            0x4000 => {
+                if v[get_reg(opcode, 1)] != get_nn(opcode) {
+                    pc += 4;
+                } else {
+                    pc += 2;
+                }
+            }
+            0x5000 => {
+                if v[get_reg(opcode, 1)] == v[get_reg(opcode, 2)] {
                     pc += 4;
                 } else {
                     pc += 2;
@@ -99,6 +128,44 @@ fn main() {
             0x7000 => {
                 v[get_reg(opcode, 1)] += get_nn(opcode);
                 pc += 2;
+            }
+            0x8000 => {
+                let x = get_reg(opcode, 1);
+                let y = get_reg(opcode, 2);
+                match opcode & 0x000F {
+                    0x0000 => {
+                        v[x] = v[y];
+                        pc += 2;
+                    }
+                    0x0002 => {
+                        v[x] &= v[y];
+                        pc += 2;
+                    }
+                    0x0004 => {
+                        let (s, c) = v[x].overflowing_add(v[y]);
+                        v[x] = s;
+                        if c {
+                            v[0xF] = 1;
+                        } else {
+                            v[0xF] = 0;
+                        }
+                        pc += 2;
+                    }
+                    0x0006 => {
+                        v[0xF] = v[x] & 0x01;
+                        v[x] >>= 1;
+                        pc += 2;
+                    }
+                    0x000E => {
+                        v[0xF] = v[x] & 0x80;
+                        v[x] <<= 1;
+                        pc += 2;
+                    }
+                    _ => print_error_and_quit(&format!(
+                        "Error: instruction {:#06X} not implemented!",
+                        opcode
+                    )),
+                }
             }
             0xA000 => {
                 i = opcode & 0xFFF;
@@ -124,8 +191,41 @@ fn main() {
                 }
                 pc += 2;
             }
+            0xF000 => {
+                let x = get_reg(opcode, 1);
+                match opcode & 0x00FF {
+                    0x0007 => {
+                        v[x] = timer.get();
+                        pc += 2;
+                    }
+                    0x0015 => {
+                        timer.set(x as u8);
+                        pc += 2;
+                    }
+                    0x001E => {
+                        i += v[x] as u16;
+                        pc += 2;
+                    }
+                    0x0055 => {
+                        for j in 0..=x {
+                            memory[i as usize + j] = v[j];
+                        }
+                        pc += 2;
+                    }
+                    0x0065 => {
+                        for j in 0..=x {
+                            v[j] = memory[i as usize + j];
+                        }
+                        pc += 2;
+                    }
+                    _ => print_error_and_quit(&format!(
+                        "Error: instruction {:#06X} not implemented!",
+                        opcode
+                    )),
+                }
+            }
             _ => print_error_and_quit(&format!(
-                "Error: instruction {:#X} not implemented!",
+                "Error: instruction {:#06X} not implemented!",
                 opcode
             )),
         }
