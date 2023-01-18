@@ -1,5 +1,4 @@
 use std::env;
-use std::fs;
 use std::process;
 use std::time::{Duration, Instant};
 
@@ -7,7 +6,7 @@ use rand::Rng;
 
 extern crate sdl2;
 
-mod rchip8;
+extern crate rchip8;
 use rchip8::audio::Audio;
 use rchip8::commons::CanTick;
 use rchip8::display::Display;

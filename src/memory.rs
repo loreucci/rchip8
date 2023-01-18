@@ -1,6 +1,6 @@
 use std::fs;
 
-const chip8_fontset: [u8; 80] = [
+const CHIP8_FONTSET: [u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
     0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -31,7 +31,7 @@ pub fn load_rom(mem: &mut [u8], rom_path: &str) -> Result<(), String> {
 }
 
 pub fn load_character_set(mem: &mut [u8]) {
-    for k in 0..chip8_fontset.len() {
-        mem[k] = chip8_fontset[k];
+    for k in 0..CHIP8_FONTSET.len() {
+        mem[k] = CHIP8_FONTSET[k];
     }
 }
