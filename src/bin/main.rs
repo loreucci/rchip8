@@ -137,8 +137,16 @@ fn main() {
                         v[x] = v[y];
                         pc += 2;
                     }
+                    0x0001 => {
+                        v[x] |= v[y];
+                        pc += 2;
+                    }
                     0x0002 => {
                         v[x] &= v[y];
+                        pc += 2;
+                    }
+                    0x0003 => {
+                        v[x] ^= v[y];
                         pc += 2;
                     }
                     0x0004 => {
@@ -151,9 +159,21 @@ fn main() {
                         }
                         pc += 2;
                     }
+                    0x0005 => {
+                        let b = if v[y] > v[x] { 0 } else { 1 };
+                        v[x] -= v[y];
+                        v[0xF] = b;
+                        pc += 2;
+                    }
                     0x0006 => {
                         v[0xF] = v[x] & 0x01;
                         v[x] >>= 1;
+                        pc += 2;
+                    }
+                    0x0007 => {
+                        let b = if v[x] > v[y] { 0 } else { 1 };
+                        v[x] = v[y] - v[x];
+                        v[0xF] = b;
                         pc += 2;
                     }
                     0x000E => {
@@ -165,6 +185,13 @@ fn main() {
                         "Error: instruction {:#06X} not implemented!",
                         opcode
                     )),
+                }
+            }
+            0x9000 => {
+                if v[get_reg(opcode, 1)] != v[get_reg(opcode, 2)] {
+                    pc += 4;
+                } else {
+                    pc += 2;
                 }
             }
             0xA000 => {
