@@ -1,7 +1,7 @@
-use std::env;
 use std::process;
 use std::time::{Duration, Instant};
 
+use clap::Parser;
 use rand::Rng;
 
 extern crate sdl2;
@@ -13,6 +13,17 @@ use rchip8::display::Display;
 use rchip8::keyboard::Keyboard;
 use rchip8::memory;
 use rchip8::timer::Timer;
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// emulated CPU frequency
+    #[arg(short, long, default_value_t = 500)]
+    freq: u32,
+
+    /// ROM to execute
+    rom: String,
+}
 
 fn print_error_and_quit(s: &str) -> ! {
     eprintln!("{}", s);
@@ -38,16 +49,10 @@ fn get_nnn(opcode: u16) -> u16 {
 
 fn main() {
     // parse arguments
-    let mut args = env::args();
-    args.next();
-    let rom_path = match args.next() {
-        Some(name) => name,
-        None => print_error_and_quit("Not enough arguments, specify a path to a ROM."),
-    };
+    let args = Args::parse();
 
     // clock frequency
-    let freq = 500u32;
-    let cycle_duration = Duration::new(0, 1_000_000_000u32 / freq);
+    let cycle_duration = Duration::new(0, 1_000_000_000u32 / args.freq);
 
     // memory, registers and stack
     let mut memory = [0u8; 4096];
@@ -55,7 +60,7 @@ fn main() {
     let mut i = 0u16;
     let mut stack: Vec<u16> = Vec::new();
     let mut pc = 512u16;
-    memory::load_rom(&mut memory, &rom_path).unwrap_or_else(|err| print_error_and_quit(&err));
+    memory::load_rom(&mut memory, &args.rom).unwrap_or_else(|err| print_error_and_quit(&err));
     memory::load_character_set(&mut memory);
 
     // initialize sdl
@@ -69,10 +74,11 @@ fn main() {
     let mut keyboard = Keyboard::new(&sdl_context).unwrap_or_else(|err| print_error_and_quit(&err));
 
     // create audio device
-    let mut audio = Audio::new(&sdl_context, freq).unwrap_or_else(|err| print_error_and_quit(&err));
+    let mut audio =
+        Audio::new(&sdl_context, args.freq).unwrap_or_else(|err| print_error_and_quit(&err));
 
     // timer
-    let mut timer = Timer::new(freq);
+    let mut timer = Timer::new(args.freq);
 
     // main loop
     'running: loop {

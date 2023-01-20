@@ -12,3 +12,4 @@ path = "src/bin/main.rs"
 [dependencies]
 sdl2 = "0.35"
 rand = "0.8.3"
+clap = { version = "4", features = ["derive"]}
