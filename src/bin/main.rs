@@ -198,6 +198,9 @@ fn main() {
                 i = opcode & 0xFFF;
                 pc += 2;
             }
+            0xB000 => {
+                pc = v[0] as u16 + get_nnn(opcode);
+            }
             0xC000 => {
                 let r = rand::thread_rng().gen_range(0..=255);
                 v[get_reg(opcode, 1)] = r & get_nn(opcode);
@@ -218,6 +221,29 @@ fn main() {
                 }
                 pc += 2;
             }
+            0xE000 => {
+                let x = get_reg(opcode, 1);
+                match opcode & 0x00FF {
+                    0x009E => {
+                        if keyboard.is_down(v[x]) {
+                            pc += 4;
+                        } else {
+                            pc += 2;
+                        }
+                    }
+                    0x00A1 => {
+                        if !keyboard.is_down(v[x]) {
+                            pc += 4;
+                        } else {
+                            pc += 2;
+                        }
+                    }
+                    _ => print_error_and_quit(&format!(
+                        "Error: instruction {:#06X} not implemented!",
+                        opcode
+                    )),
+                }
+            }
             0xF000 => {
                 let x = get_reg(opcode, 1);
                 match opcode & 0x00FF {
@@ -225,12 +251,35 @@ fn main() {
                         v[x] = timer.get();
                         pc += 2;
                     }
+                    0x00A => {
+                        for k in 0..16 {
+                            if keyboard.is_down(k) {
+                                v[x] = k;
+                                pc += 2;
+                                break;
+                            }
+                        }
+                    }
                     0x0015 => {
                         timer.set(x as u8);
                         pc += 2;
                     }
+                    0x0018 => {
+                        audio.play_sound(v[x]);
+                        pc += 2;
+                    }
                     0x001E => {
                         i += v[x] as u16;
+                        pc += 2;
+                    }
+                    0x0029 => {
+                        i = v[x] as u16 * 0x5;
+                        pc += 2;
+                    }
+                    0x0033 => {
+                        memory[i as usize] = v[x] / 100;
+                        memory[i as usize + 1] = (v[x] % 100) / 10;
+                        memory[i as usize + 2] = v[x] % 10;
                         pc += 2;
                     }
                     0x0055 => {
