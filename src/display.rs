@@ -5,6 +5,7 @@ use sdl2::Sdl;
 
 use super::commons::CanTick;
 
+/// Display manager
 pub struct Display {
     canvas: WindowCanvas,
     memory: [u8; 64 * 32],
@@ -13,6 +14,7 @@ pub struct Display {
 }
 
 impl Display {
+    /// Create a new display manager.
     pub fn new(sdl: &Sdl, pixel_size: u32) -> Result<Display, String> {
         let video_subsystem = sdl.video()?;
         let window = video_subsystem
@@ -32,6 +34,7 @@ impl Display {
         })
     }
 
+    /// Draw a sprite at a given location.
     #[must_use = "Value must be used to set VF"]
     pub fn draw(&mut self, x: u8, y: u8, sprite: &[u8]) -> bool {
         let x = x as usize;
@@ -56,6 +59,7 @@ impl Display {
         carry
     }
 
+    /// Clear the display.
     pub fn clear(&mut self) {
         for i in 0..self.memory.len() {
             self.memory[i] = 0;
@@ -64,6 +68,7 @@ impl Display {
     }
 }
 
+/// Each tick, the display manager refreshes the screen, if necessary.
 impl CanTick for Display {
     fn tick(&mut self) {
         if !self.refresh {

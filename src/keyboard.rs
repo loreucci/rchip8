@@ -7,6 +7,7 @@ use sdl2::Sdl;
 
 use super::commons::CanTick;
 
+/// Keyboard manager
 pub struct Keyboard {
     event_pump: EventPump,
     pub quit_requested: bool,
@@ -15,6 +16,7 @@ pub struct Keyboard {
 }
 
 impl Keyboard {
+    /// Create a new keyboard manager.
     pub fn new(sdl: &Sdl) -> Result<Keyboard, String> {
         let event_pump = sdl.event_pump()?;
 
@@ -45,11 +47,13 @@ impl Keyboard {
         })
     }
 
+    /// Check if a given key is pressed.
     pub fn is_down(&self, k: u8) -> bool {
         self.keys[k as usize]
     }
 }
 
+/// Each tick, the keyboard manager check for keypresses and store their values.
 impl CanTick for Keyboard {
     fn tick(&mut self) {
         for event in self.event_pump.poll_iter() {

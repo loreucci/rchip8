@@ -95,23 +95,29 @@ fn main() {
         match opcode & 0xF000 {
             0x0000 => {
                 if opcode == 0x00E0 {
+                    // disp_clear()
                     display.clear();
                     pc += 2;
                 } else if opcode == 0x00EE {
+                    // return;
                     pc = stack.pop().unwrap();
                 } else {
+                    // machine code routine
                     stack.push(pc + 2);
                     pc = get_nnn(opcode);
                 }
             }
             0x1000 => {
+                // goto NNN;
                 pc = get_nnn(opcode);
             }
             0x2000 => {
+                // *(0xNNN)()
                 stack.push(pc + 2);
                 pc = get_nnn(opcode);
             }
             0x3000 => {
+                // if (Vx == NN)
                 if v[get_reg(opcode, 1)] == get_nn(opcode) {
                     pc += 4;
                 } else {
@@ -119,6 +125,7 @@ fn main() {
                 }
             }
             0x4000 => {
+                // if (Vx != NN)
                 if v[get_reg(opcode, 1)] != get_nn(opcode) {
                     pc += 4;
                 } else {
@@ -126,6 +133,7 @@ fn main() {
                 }
             }
             0x5000 => {
+                // if (Vx == Vy)
                 if v[get_reg(opcode, 1)] == v[get_reg(opcode, 2)] {
                     pc += 4;
                 } else {
@@ -133,10 +141,12 @@ fn main() {
                 }
             }
             0x6000 => {
+                // Vx = NN
                 v[get_reg(opcode, 1)] = get_nn(opcode);
                 pc += 2;
             }
             0x7000 => {
+                // Vx += NN
                 v[get_reg(opcode, 1)] += get_nn(opcode);
                 pc += 2;
             }
@@ -145,22 +155,27 @@ fn main() {
                 let y = get_reg(opcode, 2);
                 match opcode & 0x000F {
                     0x0000 => {
+                        // Vx = Vy
                         v[x] = v[y];
                         pc += 2;
                     }
                     0x0001 => {
+                        // Vx |= Vy
                         v[x] |= v[y];
                         pc += 2;
                     }
                     0x0002 => {
+                        // Vx &= Vy
                         v[x] &= v[y];
                         pc += 2;
                     }
                     0x0003 => {
+                        // Vx ^= Vy
                         v[x] ^= v[y];
                         pc += 2;
                     }
                     0x0004 => {
+                        // Vx += Vy
                         let (s, c) = v[x].overflowing_add(v[y]);
                         v[x] = s;
                         if c {
@@ -171,23 +186,27 @@ fn main() {
                         pc += 2;
                     }
                     0x0005 => {
+                        // Vx -= Vy
                         let b = if v[y] > v[x] { 0 } else { 1 };
                         v[x] -= v[y];
                         v[0xF] = b;
                         pc += 2;
                     }
                     0x0006 => {
+                        // Vx >>= 1
                         v[0xF] = v[x] & 0x01;
                         v[x] >>= 1;
                         pc += 2;
                     }
                     0x0007 => {
+                        // Vx = Vy - Vx
                         let b = if v[x] > v[y] { 0 } else { 1 };
                         v[x] = v[y] - v[x];
                         v[0xF] = b;
                         pc += 2;
                     }
                     0x000E => {
+                        // Vx <<= 1
                         v[0xF] = v[x] & 0x80;
                         v[x] <<= 1;
                         pc += 2;
@@ -199,6 +218,7 @@ fn main() {
                 }
             }
             0x9000 => {
+                // if (Vx != Vy)
                 if v[get_reg(opcode, 1)] != v[get_reg(opcode, 2)] {
                     pc += 4;
                 } else {
@@ -206,18 +226,22 @@ fn main() {
                 }
             }
             0xA000 => {
-                i = opcode & 0xFFF;
+                // I = NNN
+                i = get_nnn(opcode);
                 pc += 2;
             }
             0xB000 => {
+                // PC = V0 + NNN
                 pc = v[0] as u16 + get_nnn(opcode);
             }
             0xC000 => {
+                // Vx = rand() & NN
                 let r = rand::thread_rng().gen_range(0..=255);
                 v[get_reg(opcode, 1)] = r & get_nn(opcode);
                 pc += 2;
             }
             0xD000 => {
+                // draw(Vx, Vy, N)
                 let x = get_reg(opcode, 1);
                 let y = get_reg(opcode, 2);
                 let n = get_n(opcode) as usize;
@@ -236,6 +260,7 @@ fn main() {
                 let x = get_reg(opcode, 1);
                 match opcode & 0x00FF {
                     0x009E => {
+                        // if (key() == Vx)
                         if keyboard.is_down(v[x]) {
                             pc += 4;
                         } else {
@@ -243,6 +268,7 @@ fn main() {
                         }
                     }
                     0x00A1 => {
+                        // if (key() != Vx)
                         if !keyboard.is_down(v[x]) {
                             pc += 4;
                         } else {
@@ -259,10 +285,12 @@ fn main() {
                 let x = get_reg(opcode, 1);
                 match opcode & 0x00FF {
                     0x0007 => {
+                        // Vx = get_delay()
                         v[x] = timer.get();
                         pc += 2;
                     }
                     0x00A => {
+                        // Vx = get_key()
                         for k in 0..16 {
                             if keyboard.is_down(k) {
                                 v[x] = k;
@@ -272,34 +300,41 @@ fn main() {
                         }
                     }
                     0x0015 => {
+                        // delay_timer(Vx)
                         timer.set(x as u8);
                         pc += 2;
                     }
                     0x0018 => {
+                        // sound_timer(Vx)
                         audio.play_sound(v[x]);
                         pc += 2;
                     }
                     0x001E => {
+                        // I += Vx
                         i += v[x] as u16;
                         pc += 2;
                     }
                     0x0029 => {
+                        // I = sprite_addr[Vx]
                         i = v[x] as u16 * 0x5;
                         pc += 2;
                     }
                     0x0033 => {
+                        // set_BCD(Vx)
                         memory[i as usize] = v[x] / 100;
                         memory[i as usize + 1] = (v[x] % 100) / 10;
                         memory[i as usize + 2] = v[x] % 10;
                         pc += 2;
                     }
                     0x0055 => {
+                        // reg_dump(Vx, &I)
                         for j in 0..=x {
                             memory[i as usize + j] = v[j];
                         }
                         pc += 2;
                     }
                     0x0065 => {
+                        // reg_load(Vx, &I)
                         for j in 0..=x {
                             v[j] = memory[i as usize + j];
                         }

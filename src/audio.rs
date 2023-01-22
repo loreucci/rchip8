@@ -3,6 +3,7 @@ use sdl2::Sdl;
 
 use super::commons::CanTick;
 
+/// Audio manager
 pub struct Audio {
     time: u8,
     ticks: u32,
@@ -11,6 +12,7 @@ pub struct Audio {
 }
 
 impl Audio {
+    /// Create a new audio managaer from an SDL context.
     pub fn new(sdl: &Sdl, freq: u32) -> Result<Audio, String> {
         let subsystem = sdl.audio()?;
         let spec = AudioSpecDesired {
@@ -27,6 +29,7 @@ impl Audio {
         })
     }
 
+    /// Play a beeping sound for a given duration (at 60Hz).
     pub fn play_sound(&mut self, duration: u8) {
         // create square wave
         let tone_volume = 1_000i16;
@@ -60,6 +63,7 @@ impl Audio {
     }
 }
 
+/// Each tick, the audio manager check if the audio timer is expired and possibly stops the playback.
 impl CanTick for Audio {
     fn tick(&mut self) {
         if self.time > 0 {

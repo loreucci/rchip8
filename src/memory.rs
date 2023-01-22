@@ -19,6 +19,7 @@ const CHIP8_FONTSET: [u8; 80] = [
     0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 ];
 
+/// Load rom from a file into memory.
 pub fn load_rom(mem: &mut [u8], rom_path: &str) -> Result<(), String> {
     let rom = match fs::read(rom_path) {
         Ok(rom_data) => rom_data,
@@ -30,6 +31,7 @@ pub fn load_rom(mem: &mut [u8], rom_path: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Load character set into memory.
 pub fn load_character_set(mem: &mut [u8]) {
     for k in 0..CHIP8_FONTSET.len() {
         mem[k] = CHIP8_FONTSET[k];
