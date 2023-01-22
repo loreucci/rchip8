@@ -21,6 +21,10 @@ struct Args {
     #[arg(short, long, default_value_t = 500)]
     freq: u32,
 
+    /// size of pixels
+    #[arg(short, long, default_value_t = 10)]
+    pixel: u32,
+
     /// ROM to execute
     rom: String,
 }
@@ -67,7 +71,8 @@ fn main() {
     let sdl_context = sdl2::init().unwrap_or_else(|err| print_error_and_quit(&err));
 
     // create display and show it
-    let mut display = Display::new(&sdl_context).unwrap_or_else(|err| print_error_and_quit(&err));
+    let mut display =
+        Display::new(&sdl_context, args.pixel).unwrap_or_else(|err| print_error_and_quit(&err));
     display.tick();
 
     // create keyboard manager

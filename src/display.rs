@@ -5,19 +5,18 @@ use sdl2::Sdl;
 
 use super::commons::CanTick;
 
-const PIXEL_SIZE: u32 = 10;
-
 pub struct Display {
     canvas: WindowCanvas,
     memory: [u8; 64 * 32],
     refresh: bool,
+    pixel_size: u32,
 }
 
 impl Display {
-    pub fn new(sdl: &Sdl) -> Result<Display, String> {
+    pub fn new(sdl: &Sdl, pixel_size: u32) -> Result<Display, String> {
         let video_subsystem = sdl.video()?;
         let window = video_subsystem
-            .window("rchip8", 64 * PIXEL_SIZE, 32 * PIXEL_SIZE)
+            .window("rchip8", 64 * pixel_size, 32 * pixel_size)
             .position_centered()
             .opengl()
             .build()
@@ -29,6 +28,7 @@ impl Display {
             canvas,
             memory: [0; 64 * 32],
             refresh: true,
+            pixel_size,
         })
     }
 
@@ -82,10 +82,10 @@ impl CanTick for Display {
                 let y: u32 = (i / 64).try_into().unwrap();
                 self.canvas
                     .fill_rect(Rect::new(
-                        (x * PIXEL_SIZE) as i32,
-                        (y * PIXEL_SIZE) as i32,
-                        PIXEL_SIZE,
-                        PIXEL_SIZE,
+                        (x * self.pixel_size) as i32,
+                        (y * self.pixel_size) as i32,
+                        self.pixel_size,
+                        self.pixel_size,
                     ))
                     .unwrap_or_else(|err| {
                         eprintln!("Unable to draw: {}", err);
